@@ -67,17 +67,21 @@ pipeline {
 
         // Stage 2: Build & Push
         stage('Build & Push') {
-    container('kaniko') {
-        script {
-            withCredentials([string(credentialsId: 'docker-hub-creds', variable: 'DOCKER_CREDS')]) {
-                sh '''
-                echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_CREDS} | base64)\\"}}}" > /kaniko/.docker/config.json
-                /kaniko/executor --dockerfile=Dockerfile --destination=${DOCKER_IMAGE_NAME}:${COMMIT_SHA} --context=.
-                '''
+            steps { // <--- FIXED: Added 'steps' block
+                container('kaniko') {
+                    script {
+                        withCredentials([string(credentialsId: 'docker-hub-creds', variable: 'DOCKER_CREDS')]) {
+                            sh '''
+                            echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_CREDS} | base64)\\"}}}" > /kaniko/.docker/config.json
+                            
+                            # FIXED: Using your defined DOCKER_IMAGE variable and env.BUILD_NUMBER
+                            /kaniko/executor --dockerfile=Dockerfile --destination=${DOCKER_IMAGE}:${env.BUILD_NUMBER} --context=.
+                            '''
+                        }
+                    }
+                }
             }
         }
-    }
-}
 
         // Stage 3: Deploy
         stage('Deploy') {
@@ -93,7 +97,7 @@ pipeline {
                             caCertificate: K8S_CA_CERT
                         ]) {
                             // Update the image tag in our manifest
-                            sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:\${env.BUILD_NUMBER}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
+                            sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
 
                             // Apply our 'k8s' directory to the 'apps' namespace
                             sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
