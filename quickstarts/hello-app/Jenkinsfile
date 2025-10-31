@@ -1,4 +1,4 @@
-// This is our updated Jenkinsfile
+// --- START: PASTE YOUR VALUES HERE ---
 
 // 1. REPLACE with your server URL
 def K8S_SERVER = "https://10.10.0.201:6443" 
@@ -9,46 +9,110 @@ def K8S_CA_CERT = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ
 // 3. REPLACE with your Docker Hub username
 def DOCKER_IMAGE = "chadalanlester/hello-app"
 
+// --- END: PASTE YOUR VALUES HERE ---
+
 pipeline {
-    agent any
+    // This 'agent' block now tells Jenkins to spin up a
+    // new pod in the 'cicd' namespace for this pipeline.
+    agent {
+        kubernetes {
+            // We are defining the build-pod "template" right here.
+            // It will be created in the same namespace as Jenkins.
+            namespace 'cicd'
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              # Container 1: Kaniko for building
+              - name: kaniko
+                image: gcr.io/kaniko-project/executor:v1.12.1-debug
+                command:
+                - /bin/sh
+                - -c
+                args:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: workspace
+                  mountPath: /workspace
+
+              # Container 2: Kubectl for deploying
+              - name: kubectl
+                image: bitnami/kubectl:latest
+                command:
+                - /bin/sh
+                - -c
+                args:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: workspace
+                  mountPath: /workspace
+
+              volumes:
+              - name: workspace
+                emptyDir: {}
+            """
+        }
+    }
     stages {
-        // --- THIS STAGE IS REPLACED ---
-        stage('Build with Kaniko') {
+        // Stage 1: Checkout
+        // This runs in the default 'jnlp' container in our pod
+        stage('Checkout') {
             steps {
-                script {
-                    // This 'withCredentials' block securely injects our
-                    // 'docker-hub-creds' as environment variables.
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        
-                        // We run the Kaniko executor in a container.
-                        // Kaniko handles the build and push.
-                        sh """
-                        /kaniko/executor \
-                          --context \${WORKSPACE} \
-                          --dockerfile \${WORKSPACE}/Dockerfile \
-                          --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
-                          --build-arg=VERSION=${env.BUILD_NUMBER} \
-                          --username \${DOCKER_USER} \
-                          --password \${DOCKER_PASS}
-                        """
+                checkout scm
+            }
+        }
+
+        // Stage 2: Build & Push
+        stage('Build & Push') {
+            steps {
+                // We explicitly tell Jenkins to run these steps
+                // inside the 'kaniko' container defined above.
+                container('kaniko') {
+                    script {
+                        // We use 'withCredentials' to get our Docker Hub password
+                        // It creates a temporary config file for Kaniko to use.
+                        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+
+                            // Create the Docker config.json for Kaniko
+                            sh "echo '{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"'$(echo -n ${DOCKER_USER}:${DOCKER_PASS} | base64 -w 0)'\"}}}' > /kaniko/.docker/config.json"
+
+                            // Run the Kaniko executor
+                            // Note the context is now '/workspace'
+                            sh """
+                            /kaniko/executor \
+                              --context \${WORKSPACE}/quickstarts/hello-app \
+                              --dockerfile \${WORKSPACE}/quickstarts/hello-app/Dockerfile \
+                              --destination ${DOCKER_IMAGE}:\${env.BUILD_NUMBER} \
+                              --build-arg=VERSION=\${env.BUILD_NUMBER}
+                            """
+                        }
                     }
                 }
             }
         }
-        // --- THIS STAGE IS THE SAME AS BEFORE ---
+
+        // Stage 3: Deploy
         stage('Deploy') {
             steps {
-                script {
-                    withKubeconfig([
-                        credentialsId: 'jenkins-k8s-token',
-                        serverUrl: K8S_SERVER,
-                        caCertificate: K8S_CA_CERT
-                    ]) {
-                        // First, update the image in our deployment manifest
-                        sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' k8s/deployment.yaml"
-                        
-                        // Now, deploy all manifests in the k8s/ directory
-                        sh "kubectl apply -f k8s/ -n apps"
+                // We run these steps in the 'kubectl' container
+                container('kubectl') {
+                    script {
+                        // We use 'withKubeconfig' to securely load our
+                        // 'jenkins-k8s-token' credential
+                        withKubeconfig([
+                            credentialsId: 'jenkins-k8s-token',
+                            serverUrl: K8S_SERVER,
+                            caCertificate: K8S_CA_CERT
+                        ]) {
+                            // Update the image tag in our manifest
+                            sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:\${env.BUILD_NUMBER}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
+
+                            // Apply our 'k8s' directory to the 'apps' namespace
+                            sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
+                        }
                     }
                 }
             }
