@@ -67,32 +67,17 @@ pipeline {
 
         // Stage 2: Build & Push
         stage('Build & Push') {
-            steps {
-                // We explicitly tell Jenkins to run these steps
-                // inside the 'kaniko' container defined above.
-                container('kaniko') {
-                    script {
-                        // We use 'withCredentials' to get our Docker Hub password
-                        // It creates a temporary config file for Kaniko to use.
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-
-                            // Create the Docker config.json for Kaniko
-                            sh '''echo '{"auths":{"https://index.docker.io/v1/":{"auth":"'$(echo -n $DOCKER_USER:$DOCKER_PASS | base64 -w 0)'"}}}' > /kaniko/.docker/config.json'''
-
-                            // Run the Kaniko executor
-                            // Note the context is now '/workspace'
-                            sh """
-                            /kaniko/executor \
-                              --context \${WORKSPACE}/quickstarts/hello-app \
-                              --dockerfile \${WORKSPACE}/quickstarts/hello-app/Dockerfile \
-                              --destination ${DOCKER_IMAGE}:\${env.BUILD_NUMBER} \
-                              --build-arg=VERSION=\${env.BUILD_NUMBER}
-                            """
-                        }
-                    }
-                }
+    container('kaniko') {
+        script {
+            withCredentials([string(credentialsId: 'docker-hub-creds', variable: 'DOCKER_CREDS')]) {
+                sh '''
+                echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_CREDS} | base64)\\"}}}" > /kaniko/.docker/config.json
+                /kaniko/executor --dockerfile=Dockerfile --destination=${DOCKER_IMAGE_NAME}:${COMMIT_SHA} --context=.
+                '''
             }
         }
+    }
+}
 
         // Stage 3: Deploy
         stage('Deploy') {
