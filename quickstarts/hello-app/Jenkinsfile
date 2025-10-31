@@ -77,7 +77,7 @@ pipeline {
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
 
                             // Create the Docker config.json for Kaniko
-                            sh "echo '{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"'$(echo -n ${DOCKER_USER}:${DOCKER_PASS} | base64 -w 0)'\"}}}' > /kaniko/.docker/config.json"
+                            sh '''echo '{"auths":{"https://index.docker.io/v1/":{"auth":"'$(echo -n $DOCKER_USER:$DOCKER_PASS | base64 -w 0)'"}}}' > /kaniko/.docker/config.json'''
 
                             // Run the Kaniko executor
                             // Note the context is now '/workspace'
