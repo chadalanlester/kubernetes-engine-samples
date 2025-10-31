@@ -12,20 +12,33 @@ def DOCKER_IMAGE = "chadalanlester/hello-app"
 pipeline {
     agent any
     stages {
-        stage('Build & Push') {
+        // --- THIS STAGE IS REPLACED ---
+        stage('Build with Kaniko') {
             steps {
                 script {
-                    def app = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-creds') {
-                        app.push()
+                    // This 'withCredentials' block securely injects our
+                    // 'docker-hub-creds' as environment variables.
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        
+                        // We run the Kaniko executor in a container.
+                        // Kaniko handles the build and push.
+                        sh """
+                        /kaniko/executor \
+                          --context \${WORKSPACE} \
+                          --dockerfile \${WORKSPACE}/Dockerfile \
+                          --destination ${DOCKER_IMAGE}:${env.BUILD_NUMBER} \
+                          --build-arg=VERSION=${env.BUILD_NUMBER} \
+                          --username \${DOCKER_USER} \
+                          --password \${DOCKER_PASS}
+                        """
                     }
                 }
             }
         }
+        // --- THIS STAGE IS THE SAME AS BEFORE ---
         stage('Deploy') {
             steps {
                 script {
-                    // This 'withKubeconfig' uses our 'Secret text' credential
                     withKubeconfig([
                         credentialsId: 'jenkins-k8s-token',
                         serverUrl: K8S_SERVER,
@@ -33,7 +46,7 @@ pipeline {
                     ]) {
                         // First, update the image in our deployment manifest
                         sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' k8s/deployment.yaml"
-
+                        
                         // Now, deploy all manifests in the k8s/ directory
                         sh "kubectl apply -f k8s/ -n apps"
                     }
