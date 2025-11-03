@@ -65,15 +65,19 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        // FIXED: Use 'usernamePassword' to match your credential type
-                        // and use the new 'docker-hub-token' credential ID
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                            sh '''
-                            # FIXED: Use the new DOCKER_USER and DOCKER_PASS variables
-                            echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_USER}:${DOCKER_PASS} | base64)\\"}}}" > /kaniko/.docker/config.json
-                            
-                            /kaniko/executor --dockerfile=Dockerfile --destination=${DOCKER_IMAGE}:${env.BUILD_NUMBER} --context=.
-                            '''
+                        // FIXED: Wrap in withEnv to safely pass Groovy vars to the shell
+                        withEnv([
+                            "DESTINATION_IMAGE=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                        ]) {
+                            withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                                sh '''
+                                # This line uses shell variables injected by withCredentials
+                                echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_USER}:${DOCKER_PASS} | base64)\\"}}}" > /kaniko/.docker/config.json
+                                
+                                # FIXED: This line now uses the $DESTINATION_IMAGE shell variable
+                                /kaniko/executor --dockerfile=Dockerfile --destination=${DESTINATION_IMAGE} --context=.
+                                '''
+                            }
                         }
                     }
                 }
@@ -90,8 +94,11 @@ pipeline {
                             serverUrl: K8S_SERVER,
                             caCertificate: K8S_CA_CERT
                         ]) {
-                            sh "sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
-                            sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
+                            // FIXED: Use withEnv here as well for the same reason
+                            withEnv(["DESTINATION_IMAGE=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"]) {
+                                sh "sed -i 's|image:.*|image: ${DESTINATION_IMAGE}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
+                                sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
+                            }
                         }
                     }
                 }
