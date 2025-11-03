@@ -35,7 +35,8 @@ pipeline {
 
               # Container 2: Kubectl for deploying
               - name: kubectl
-                image: bitnami/kubectl:latest
+                # FIXED: Use a non-distroless image that includes /bin/sh
+                image: bitnami/kubectl:1.29-debian-12
                 command:
                 - /bin/sh
                 - -c
@@ -85,12 +86,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // FIXED: This 'sed' command now runs in the default 'jnlp' container
+                    // This 'sed' command runs in the default 'jnlp' container
                     withEnv(["DESTINATION_IMAGE=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"]) {
                         sh "sed -i 's|image:.*|image: ${DESTINATION_IMAGE}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
                     }
                     
-                    // FIXED: Only the 'kubectl' command runs in the 'kubectl' container
+                    // This 'kubectl' command runs in the 'kubectl' container
                     container('kubectl') {
                         withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
