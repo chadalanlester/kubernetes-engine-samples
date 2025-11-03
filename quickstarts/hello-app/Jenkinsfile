@@ -70,7 +70,6 @@ pipeline {
                         ]) {
                             withCredentials([usernamePassword(credentialsId: 'docker-hub-token', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                                 sh '''
-                                # FIXED: Removed the typo 'C' from 'httpsC://'
                                 echo "{\\"auths\\":{\\"https://index.docker.io/v1/\\":{\\"auth\\":\\"$(echo -n ${DOCKER_USER}:${DOCKER_PASS} | base64)\\"}}}" > /kaniko/.docker/config.json
                                 
                                 /kaniko/executor --dockerfile=Dockerfile --destination=${DESTINATION_IMAGE} --context=quickstarts/hello-app
@@ -87,7 +86,8 @@ pipeline {
             steps {
                 container('kubectl') {
                     script {
-                        withKubeconfig([
+                        // FIXED: Changed to 'withKubeConfig' (uppercase C) to match your plugin
+                        withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
                             serverUrl: K8S_SERVER,
                             caCertificate: K8S_CA_CERT
