@@ -35,7 +35,6 @@ pipeline {
 
               # Container 2: Kubectl for deploying
               - name: kubectl
-                # This image is correct and includes a shell
                 image: bitnamilegacy/kubectl:1.29.5-debian-12-r0
                 command:
                 - /bin/sh
@@ -96,9 +95,9 @@ pipeline {
                         withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
                             serverUrl: K8S_SERVER,
-                            caCertificate: KS_CA_CERT
+                            // FIXED: Corrected the variable name from KS_CA_CERT to K8S_CA_CERT
+                            caCertificate: K8S_CA_CERT
                         ]) {
-                            // FIXED: Use the full path to the kubectl binary
                             sh "/opt/bitnami/kubectl/bin/kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
                         }
                     }
