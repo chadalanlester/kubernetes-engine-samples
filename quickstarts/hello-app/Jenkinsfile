@@ -84,18 +84,20 @@ pipeline {
         // Stage 3: Deploy
         stage('Deploy') {
             steps {
-                container('kubectl') {
-                    script {
-                        // FIXED: Changed to 'withKubeConfig' (uppercase C) to match your plugin
+                script {
+                    // FIXED: This 'sed' command now runs in the default 'jnlp' container
+                    withEnv(["DESTINATION_IMAGE=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"]) {
+                        sh "sed -i 's|image:.*|image: ${DESTINATION_IMAGE}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
+                    }
+                    
+                    // FIXED: Only the 'kubectl' command runs in the 'kubectl' container
+                    container('kubectl') {
                         withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
                             serverUrl: K8S_SERVER,
                             caCertificate: K8S_CA_CERT
                         ]) {
-                            withEnv(["DESTINATION_IMAGE=${DOCKER_IMAGE}:${env.BUILD_NUMBER}"]) {
-                                sh "sed -i 's|image:.*|image: ${DESTINATION_IMAGE}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
-                                sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
-                            }
+                            sh "kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
                         }
                     }
                 }
