@@ -95,7 +95,8 @@ pipeline {
                         withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
                             serverUrl: K8S_SERVER,
-                            caCertificate: K8SettingS_CA_CERT
+                            // FIXED: Corrected my typo. It's K8S_CA_CERT, not K8SettingS_CA_CERT
+                            caCertificate: K8S_CA_CERT
                         ]) {
                             // DEBUG: Let's find the exact path of the kubectl binary
                             sh "find /opt -name kubectl -type f"
