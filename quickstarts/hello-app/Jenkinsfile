@@ -3,8 +3,8 @@
 // 1. Your Kubernetes Server URL
 def K8S_SERVER = "https://10.10.0.201:6443" 
 
-// 2. Your Kubernetes CA Cert
-def K8S_CA_CERT = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJS1J5UXRGcHNTVE13RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRFd016RXdNVFF6TWpoYUZ3MHpOVEV3TWprd01UUTRNamhhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURnMjg4UnA2dkg2MmwxMS80RmRNcFk5ODNmclA3N0RiUkNUMWx5WCs5L1pIUnNNRDNRUm15UTlwNnYKOVZ3M2pTUGQ3WFc2QWRPUDFHUXRmR2hYc3ZqcmZPcEpNQ2NhTjlYc1hPL3UzSWhGd0ZBZHFSMVVYeU13T3JDbwpueFIvai94Y0VWV0ZEek1YQTRzUWJZVno3VUFZNFJGWWh3a0xjK1IwbTNjUnRPWmxSL1BXeFhTZUJkSGNRS29aCjA4QnB2bTRmVU9PMkdmNEMzZ2pySU5BOUlRYVo0THRpdjQ5VkVYOXNFZTZPRmE2VE1yaXF0YkplbnN3bDREbVoKdDZtQ0daNmozRXlVNFkxZEVmeTAyTlk2R3BVNGNBSTJta1l1SjNMQVF2aE5GcGIyM2Y2cTducERXVk5iYzBuWQpUeVFYRE9xQnRXbENKTU4xYXlWNzFEemRRa1dEQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJUNzIvQnpKYkRZVXI5K2tqbXh2K2NiYVJhbVhUQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQjgrSGVvTnFRbwpQRGFkeUhZR2tlWVdQ2JVVjVpaE9jdXZVTDV5Q0QzazRqcWJCY0E5WlU3T1Z6aEZqaFBuZU01Z0lmYSt3QTdLCldzZFlEWTZUeDdxZ0cvcFo4TzUreGhkOFdPazZJck9IZHZCMWVnUElDMjJ4cytmTWFCYjdoVU5hVlFmWWViSGgKb3dvZXdHOGVHYXNLaWlMVFRSU3ptTC9XWGQzQi92L2FKNG1GYmV3MEMraTNwb3lMT2p0Ylc5UDJEa1NFeGNPTgpReGFkc20ydnIvU1cwTWwvcS9IS2lPUHhXeStGUlJValZLSUszeDkzR3hwa2xnRzRHbUxNZlh4U3pZUE9jdmRtCnVpVnIwdTk3WjFwWHNyNU9rR25OU0Q5VlhZdlJRbkY2bithUEZUMWV0UzdwRCtSSVorVWxKTW9QMHg1TEs1T2EKVmk0M09vU3Zwd1FECi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+// 2. Your Kubernetes CA Cert (as a Base64 string)
+def K8S_CA_CERT = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJS1J5UXRGcHNTVE13RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRFd016RXdNVFF6TWpoYUZ3MHpOVEV3TWprd01UUTRNamhhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURnMjg4UnA2dkg2MmwxMS80RmRNcFk5ODNmclA3N0RiUkNUMWx5WCs5L1pIUnNNRDNRUm15UTlwNnYKOVZ3M2pTUGQ3WFc2QWRPUDFHUXRmR2hYc3ZqcmZPcEpNQ2NhTjlYc1hPL3UzSWhGd0ZBZHFSMVVYeU13T3JDbwpueFIvai94Y0VWV0ZEek1YQTRzUWJZVno3VUFZNFJGWWh3a0xjK1IwbTNjUnRPWmxSL1BXeFhTZUJkSGNRS29aCjA4QnB2bTRmVU9PMkdmNEMzZ0pySU5BOUlRYVo0THRpdjQ5VkVYOXNFZTZPRmE2VE1yaXF0YkplbnN3bDREbVoKdDZtQ0daNmozRXlVNFkxZEVmeTAyTlk2R3BVNGNBSTJta1l1SjNMQVF2aE5GcGIyM2Y2cTducERXVk5iYzBuWQpUeVFYRE9xQnRXbENKTU4xYXlWNzFEemRRa1dEQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJUNzIvQnpKYkRZVXI5K2tqbXh2K2NiYVJhbVhUQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQjgrSGVvTnFRbwpQRGFkeUhZR2tlWVdQ2JVVjVpaE9jdXZVTDV5Q0QzazRqcWJCY0E5WlU3T1Z6aEZqaFBuZU01Z0lmYSt3QTdLCldzZFlEWTZUeDdxZ0cvcFo4TzUreGhkOFdPazZJck9IZHZCMWVnUElDMjJ4cytmTWFCYjdoVU5hVlFmWWViSGgKb3dvZXdHOGVHYXNLaWlMVFRSU3ptTC9XWGQzQi92L2FKNG1GYmV3MEMraTNwb3lMT2p0Ylc5UDJEa1NFeGNPTgpReGFkc20ydnIvU1cwTWwvcS9IS2lPUHhXeStGUlJValZLSUszeDkzR3hwa2xnRzRHbUxNZlh4U3pZUE9jdmRtCnVpVnIwdTk3WjFwWHNyNU9rR25OU0Q5VlhZdlJRbkY2bithUEZUMWV0UzdwRCtSSVorVWxKTW9QMHg1TEs1T2EKVmk0M09vU3Zwd1FECi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
 
 // 3. Your Docker Hub username
 def DOCKER_IMAGE = "chadlester71/hello-app"
@@ -15,8 +15,6 @@ pipeline {
     agent {
         kubernetes {
             namespace 'cicd'
-            // FIXED: Removed the 'kubectl' container completely.
-            // We will only use the default 'jnlp' container and the 'kaniko' container.
             yaml """
             apiVersion: v1
             kind: Pod
@@ -45,7 +43,6 @@ pipeline {
         // Stage 1: Checkout
         stage('Checkout') {
             steps {
-                // This runs in the default 'jnlp' container
                 checkout scm
             }
         }
@@ -53,7 +50,6 @@ pipeline {
         // Stage 2: Build & Push
         stage('Build & Push') {
             steps {
-                // This runs in the 'kaniko' container
                 container('kaniko') {
                     script {
                         withEnv([
@@ -74,7 +70,6 @@ pipeline {
 
         // Stage 3: Deploy
         stage('Deploy') {
-            // FIXED: This all runs in the default 'jnlp' container now
             steps {
                 script {
                     // Step 3a: Update the image tag in the manifest
@@ -82,11 +77,15 @@ pipeline {
                         sh "sed -i 's|image:.*|image: ${DESTINATION_IMAGE}|' \${WORKSPACE}/quickstarts/hello-app/k8s/deployment.yaml"
                     }
                     
+                    // FIXED: Decode the Base64 cert string into raw PEM text
+                    def decodedCaCert = new String(K8S_CA_CERT.decodeBase64(), 'UTF-8')
+
                     // Step 3b: Download, configure, and use kubectl
                     withKubeConfig([
                         credentialsId: 'jenkins-k8s-token',
                         serverUrl: K8S_SERVER,
-                        caCertificate: K8S_CA_CERT
+                        // FIXED: Pass the DECODED cert to the plugin
+                        caCertificate: decodedCaCert
                     ]) {
                         sh """
                         echo "--- Downloading kubectl ---"
