@@ -95,10 +95,10 @@ pipeline {
                         withKubeConfig([
                             credentialsId: 'jenkins-k8s-token',
                             serverUrl: K8S_SERVER,
-                            // FIXED: Corrected the variable name from KS_CA_CERT to K8S_CA_CERT
                             caCertificate: K8S_CA_CERT
                         ]) {
-                            sh "/opt/bitnami/kubectl/bin/kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
+                            // FIXED: Use the full, absolute path to the kubectl binary
+                            sh "/opt/bitnami/kubectl/kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
                         }
                     }
                 }
