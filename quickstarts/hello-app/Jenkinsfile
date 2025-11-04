@@ -97,8 +97,8 @@ pipeline {
                             serverUrl: K8S_SERVER,
                             caCertificate: K8S_CA_CERT
                         ]) {
-                            // FIXED: Use the full, absolute path to the kubectl binary
-                            sh "/opt/bitnami/kubectl/kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
+                            // FIXED: Use the correct, full path to the kubectl binary
+                            sh "/opt/bitnami/kubectl/bin/kubectl apply -f \${WORKSPACE}/quickstarts/hello-app/k8s/ -n apps"
                         }
                     }
                 }
